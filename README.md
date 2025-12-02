@@ -49,3 +49,22 @@ MATCH (d:Disease {name: "感冒"}) DETACH DELETE d
 左侧提示 “Deleted 3 nodes, deleted 2 relationships, completed after 8 ms.”，结果列显示 “删除成功”，表示节点与关系已删除。
 
 ## 三、Neo4j-数据导入
+### 1. 数据准备
+- 数据源文件：`disease3.csv`（由`disease1.csv`改名而来，为了适配源代码文件）。
+- 数据导入脚本：`create_graph_wmn_2.py`（负责读取CSV数据并批量创建Neo4j节点/关系）。
+
+### 2. 数据导入步骤
+#### （1）环境依赖安装
+打开命令提示符执行：
+```bash
+pip install pandas==1.5.3 py2neo==2021.2.3
+```
+#### （2）修改脚本配置
+确保create_graph_wmn_2.py中的 Neo4j 连接信息与实际一致：
+```python
+运行
+graph = Graph(
+    "bolt://localhost:7688",  # Neo4j端口（默认7687，若修改过需对应）
+    auth=("neo4j", "你的Neo4j密码")  # 替换为实际账号密码
+)
+```
