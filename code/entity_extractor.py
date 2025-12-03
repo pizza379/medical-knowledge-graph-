@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 import os
-import ahocorasick
+import pyahocorasick as ahocorasick
 from sklearn.externals import joblib
 import jieba
 import numpy as np

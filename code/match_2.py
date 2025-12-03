@@ -1,16 +1,15 @@
-# coding=gbk
-
+# -*- coding: utf-8 -*-
 import pandas as pd
 
-df = pd.read_csv('data.csv', encoding='gbk')
-column_data = list(map(str, df['c1']))
+df = pd.read_csv('data.csv', header=None, encoding='gb18030')
+column_data = list(map(str, df.iloc[:, 0]))
 #print(type(column_data))
 #print(column_data[2])
 
-text = "Í·Í´¸Ã³ÔÊ²Ã´Ò©£¿"
-#text = "Ò½Éú£¬ÎÒÎªÊ²Ã´»áÍ·Í´£¿"
-#text = "Éñ¾­Ë¥ÈõÓÐÊ²Ã´Ö¢×´£¿"
-#text = "Éñ¾­Ë¥Èõ¸Ã³ÔÊ²Ã´Ò©£¿"
+text = "Í·Í´ï¿½Ã³ï¿½Ê²Ã´Ò©ï¿½ï¿½"
+#text = "Ò½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÎªÊ²Ã´ï¿½ï¿½Í·Í´ï¿½ï¿½"
+#text = "ï¿½ï¿½Ë¥ï¿½ï¿½ï¿½ï¿½Ê²Ã´Ö¢×´ï¿½ï¿½"
+#text = "ï¿½ï¿½Ë¥ï¿½ï¿½ï¿½Ã³ï¿½Ê²Ã´Ò©ï¿½ï¿½"
 search_strings = column_data
  
 count=-1
@@ -23,9 +22,9 @@ for s in search_strings:
         name_param=s
 
 from py2neo import Graph, Node, Relationship
-graph = Graph("bolt://localhost:7688",auth=("neo4j", "delta-gossip-winter-degree-jumbo-7812")) 
+graph = Graph("bolt://localhost:7688",auth=("neo4j", "source-costume-cartel-parody-stadium-1250")) 
 
-to_check_HAS_SYMPTOM = ['Ö¢×´','±íÕ÷','ÏÖÏó','Ö¢ºò','±íÏÖ']
+to_check_HAS_SYMPTOM = ['Ö¢×´','ï¿½ï¿½ï¿½ï¿½','ï¿½ï¿½ï¿½ï¿½','Ö¢ï¿½ï¿½','ï¿½ï¿½ï¿½ï¿½']
 
 flag=[]
 for s in to_check_HAS_SYMPTOM:
@@ -44,7 +43,7 @@ if flag:
         print(record)
 
 
-to_check_HAS_Symptom_inv=['µ¼ÖÂ','Ô­Òò','³ÉÒò','ÎªÊ²Ã´','ÔõÃ´»á','ÔõÑù²Å','Õ¦Ñù²Å','ÔõÑù»á','ÈçºÎ»á','ÎªÉ¶','ÎªºÎ','ÈçºÎ²Å»á']
+to_check_HAS_Symptom_inv=['ï¿½ï¿½ï¿½ï¿½','Ô­ï¿½ï¿½','ï¿½ï¿½ï¿½ï¿½','ÎªÊ²Ã´','ï¿½ï¿½Ã´ï¿½ï¿½','ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½','Õ¦ï¿½ï¿½ï¿½ï¿½','ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½','ï¿½ï¿½Î»ï¿½','ÎªÉ¶','Îªï¿½ï¿½','ï¿½ï¿½Î²Å»ï¿½']
 flag=[]
 for s in to_check_HAS_Symptom_inv:
     if s in text:
@@ -62,7 +61,7 @@ if flag:
         print(record)
 
 
-to_check_HAS_Complication = ['²¢·¢Ö¢','²¢·¢','Ò»Æð·¢Éú','Ò»²¢·¢Éú','Ò»Æð³öÏÖ','Ò»²¢³öÏÖ','Ò»Í¬·¢Éú','Ò»Í¬³öÏÖ','°éËæ·¢Éú']
+to_check_HAS_Complication = ['ï¿½ï¿½ï¿½ï¿½Ö¢','ï¿½ï¿½ï¿½ï¿½','Ò»ï¿½ï¿½ï¿½ï¿½','Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½','Ò»ï¿½ï¿½ï¿½ï¿½ï¿½','Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½','Ò»Í¬ï¿½ï¿½ï¿½ï¿½','Ò»Í¬ï¿½ï¿½ï¿½ï¿½','ï¿½ï¿½ï¿½æ·¢ï¿½ï¿½']
 
 flag=[]
 for s in to_check_HAS_Complication:
@@ -81,7 +80,7 @@ if flag:
         print(record)
 
 
-to_check_HAS_Drug = ['Ò©','Ò©Æ·','ÓÃÒ©','½ºÄÒ','¿Ú·þÒº','Ñ×Æ¬']
+to_check_HAS_Drug = ['Ò©','Ò©Æ·','ï¿½ï¿½Ò©','ï¿½ï¿½ï¿½ï¿½','ï¿½Ú·ï¿½Òº','ï¿½ï¿½Æ¬']
 
 flag=[]
 for s in to_check_HAS_Drug:

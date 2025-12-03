@@ -90,3 +90,50 @@ MATCH (d:Disease {name: "乙肝"})-[:HAS_Drug]->(dr) RETURN dr.name
 [验证成功截图](./screenshots/数据导入验证成功.png)
 
 
+## 四、基于关键词的文本→Cypher 语句解析
+### 1. 提取实体和关系
+```bash
+运行
+# 提取实体（生成data.csv，包含所有节点类型）
+python extract_keywords.py  
+# 生成疾病与部位的关系（输出到a.txt）
+python chaifen.py  
+```
+### 2. 导入知识图谱到 Neo4j
+```bash
+# 执行 build_graph.py 构建节点和关系：
+python build_graph.py  
+```
+运行过程中会打印进度（如节点创建数量、关系创建数量）。根据数据量等待执行完成约20分钟。
+[构建图谱运行成功截图](./screenshots/图谱构建运行成功.png)
+### 3. 验证知识图谱
+在 Neo4j Browser 中执行以下 Cypher 语句验证数据是否导入成功：
+#### (1)查看所有节点类型
+```cypher
+MATCH (n) RETURN distinct labels(n)
+```
+#### (2)查看具体疾病的属性
+```cypher
+MATCH (d:Disease {name: "感冒"}) 
+RETURN d.name, d.age, d.treatment, d.rate
+```
+[验证知识图谱截图](./screenshots/验证知识图谱截图.png)
+
+## 五、实现 “文本→Cypher” 解析与问答
+1. 核心逻辑说明
+实体提取：entity_extractor.py 通过 AC 自动机匹配关键词，识别用户问题中的实体（如 “感冒” 是疾病，“发烧” 是症状）。
+意图识别：结合关键词匹配（如 “吃什么药” 对应 “查询药品” 意图）和机器学习模型，确定用户需求。
+Cypher 生成：search_answer.py 根据实体和意图生成对应的 Cypher 语句（如查询疾病症状的 Cypher 模板）。
+### 2. 交互测试
+在 bash 中运行问答测试脚本：
+```bash
+python kbqa_test.py  
+```
+输入示例问题，系统会自动解析为 Cypher 并返回结果：
+plaintext
+用户：感冒有什么症状？
+小豪：疾病 感冒 的症状有：发烧,咳嗽,头痛
+**************************************************
+用户：发烧需要吃什么药？
+小豪：疾病 感冒 的治疗方法有：多喝水；可用药品包括：感冒药,退烧药
+**************************************************

@@ -9,8 +9,11 @@ import os
 class MedicalGraph:
     def __init__(self):
         cur_dir = '/'.join(os.path.abspath(__file__).split('/')[:-1])
-        self.data_path = os.path.join(cur_dir, 'DATA/disease.csv')
-        self.graph = Graph("http://localhost:7474", username="neo4j", password="123456789")
+        self.data_path = os.path.join(cur_dir, './disease3.csv')
+        self.graph = Graph(
+    "bolt://localhost:7688",  # 协议改为bolt://，端口默认7687（若Neo4j未改端口则用7687）
+    auth=("neo4j", "source-costume-cartel-parody-stadium-1250")  # 用auth参数传账号密码
+)
 
     def read_file(self):
         """
@@ -38,7 +41,7 @@ class MedicalGraph:
         disease_to_complication = []  # 疾病与并发症关系
         disease_to_drug = []  # 疾病与药品关系
 
-        all_data = pd.read_csv(self.data_path, encoding='gb18030').loc[:, :].values
+        all_data = pd.read_csv(self.data_path, encoding='utf-8').loc[:, :].values
         for data in all_data:
             disease_dict = {}  # 疾病信息
             # 疾病
