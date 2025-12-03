@@ -50,15 +50,17 @@ MATCH (d:Disease {name: "感冒"}) DETACH DELETE d
 
 ## 三、Neo4j-数据导入
 ### 1. 数据准备
-- 数据源文件：`disease3.csv`（由`disease1.csv`改名而来，为了适配源代码文件）。
+- 数据源文件：`disease3.csv`（由`disease1.csv`改名而来，为了适配源代码文件）。将其放在create_graph_wmn_2.py同级目录，确保文件编码为UTF-8（用记事本打开→“另存为”→编码选择 “UTF-8”）
 - 数据导入脚本：`create_graph_wmn_2.py`（负责读取CSV数据并批量创建Neo4j节点/关系）。
 
 ### 2. 数据导入步骤
 #### （1）环境依赖安装
 打开命令提示符执行：
 ```bash
-pip install pandas==1.5.3 py2neo==2021.2.3
+pip install pandas py2neo
+
 ```
+[环境依赖安装截图](./screenshots/环境依赖安装.png)
 #### （2）修改脚本配置
 确保create_graph_wmn_2.py中的 Neo4j 连接信息与实际一致：
 ```python
@@ -68,3 +70,23 @@ graph = Graph(
     auth=("neo4j", "你的Neo4j密码")  # 替换为实际账号密码
 )
 ```
+[修改的代码部分](./screenshots/修改脚本配置.png)
+
+#### （3）执行导入脚本
+```bash
+# 进入脚本所在目录
+cd Desktop\medical-knowledge-graph-\code
+# 运行导入脚本
+python create_graph_wmn_2.py
+```
+[运行成功截图](./screenshots/数据导入运行成功.png)
+#### (4)数据导入验证
+```cypher
+# 查询导入的疾病节点数量
+MATCH (d:Disease) RETURN count(d) AS disease_count
+# 查询某疾病的关联药物
+MATCH (d:Disease {name: "乙肝"})-[:HAS_Drug]->(dr) RETURN dr.name
+```
+[验证成功截图](./screenshots/数据导入验证成功.png)
+
+
