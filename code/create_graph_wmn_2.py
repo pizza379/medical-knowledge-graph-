@@ -4,7 +4,7 @@
 
 import pandas as pd
 from py2neo import Graph, Node, Relationship
-graph = Graph("bolt://localhost:7688",auth=("neo4j", "source-costume-cartel-parody-stadium-1250")) 
+graph = Graph("bolt://localhost:7688",auth=("neo4j", "mask-quarter-company-elite-lotus-2723")) 
 
 df = pd.read_csv('./disease3.csv', encoding='utf-8')
 

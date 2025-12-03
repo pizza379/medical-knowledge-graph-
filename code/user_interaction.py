@@ -4,8 +4,8 @@ import pandas as pd
 
 # 1. 初始化Neo4j连接
 graph = Graph(
-    "bolt://localhost:7687",  # 替换为你的Neo4j端口
-    auth=("neo4j", "你的Neo4j密码")
+    "bolt://localhost:7688",  # 替换为你的Neo4j端口
+    auth=("neo4j", "mask-quarter-company-elite-lotus-2723")
 )
 
 # 2. 读取医疗实体数据（与match_2.py一致）

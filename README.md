@@ -96,44 +96,132 @@ MATCH (d:Disease {name: "乙肝"})-[:HAS_Drug]->(dr) RETURN dr.name
 运行
 # 提取实体（生成data.csv，包含所有节点类型）
 python extract_keywords.py  
-# 生成疾病与部位的关系（输出到a.txt）
-python chaifen.py  
 ```
-### 2. 导入知识图谱到 Neo4j
-```bash
-# 执行 build_graph.py 构建节点和关系：
-python build_graph.py  
-```
-运行过程中会打印进度（如节点创建数量、关系创建数量）。根据数据量等待执行完成约20分钟。
-[构建图谱运行成功截图](./screenshots/图谱构建运行成功.png)
-### 3. 验证知识图谱
-在 Neo4j Browser 中执行以下 Cypher 语句验证数据是否导入成功：
-#### (1)查看所有节点类型
-```cypher
-MATCH (n) RETURN distinct labels(n)
-```
-#### (2)查看具体疾病的属性
-```cypher
-MATCH (d:Disease {name: "感冒"}) 
-RETURN d.name, d.age, d.treatment, d.rate
-```
-[验证知识图谱截图](./screenshots/验证知识图谱截图.png)
+### 2.测试关键词到 Cypher 的解析逻辑
+match_2.py代码如下
+```python
+# coding=utf-8
 
-## 五、实现 “文本→Cypher” 解析与问答
-1. 核心逻辑说明
-实体提取：entity_extractor.py 通过 AC 自动机匹配关键词，识别用户问题中的实体（如 “感冒” 是疾病，“发烧” 是症状）。
-意图识别：结合关键词匹配（如 “吃什么药” 对应 “查询药品” 意图）和机器学习模型，确定用户需求。
-Cypher 生成：search_answer.py 根据实体和意图生成对应的 Cypher 语句（如查询疾病症状的 Cypher 模板）。
-### 2. 交互测试
-在 bash 中运行问答测试脚本：
-```bash
-python kbqa_test.py  
+import pandas as pd
+from py2neo import Graph
+
+# 1. 连接Neo4j（确保配置正确）
+graph = Graph("bolt://localhost:7688", auth=("neo4j", "mask-quarter-company-elite-lotus-2723"))
+
+# 2. 读取data.csv，获取所有实体及类型（过滤空值和非字符串）
+def load_entities():
+    try:
+        df = pd.read_csv('data.csv', encoding='gbk')
+        entity_dict = {}
+        for _, row in df.iterrows():
+            # 提取实体名称和类型，强制转为字符串并去空格
+            entity_name = str(row.iloc[0]).strip()
+            entity_type = str(row.iloc[1]).strip()
+            # 跳过空值或"nan"（NaN转换后的字符串）
+            if entity_name not in ["", "nan"] and entity_type not in ["", "nan"]:
+                entity_dict[entity_name] = entity_type
+        return entity_dict
+    except Exception as e:
+        print(f"读取实体失败: {e}")
+        return {}
+
+# 3. 从文本中提取所有匹配的实体
+def extract_entities(text, entity_dict):
+    matched_entities = []
+    for entity_name, entity_type in entity_dict.items():
+        # 确保entity_name是字符串且存在于文本中
+        if isinstance(entity_name, str) and entity_name in text:
+            matched_entities.append({
+                "name": entity_name,
+                "type": entity_type
+            })
+    return matched_entities
+
+# 4. 识别用户意图
+def identify_intent(text):
+    intent_keywords = {
+        "药物": ["药", "吃药", "吃什么药", "用药", "药品"],
+        "症状": ["症状", "表现", "征兆"],
+        "疾病": ["原因", "是什么病", "对应疾病"],
+        "并发症": ["并发症", "后遗症"]
+    }
+    for intent, keywords in intent_keywords.items():
+        if any(keyword in text for keyword in keywords):
+            return intent
+    return "未知"
+
+# 5. 根据实体类型和意图执行查询
+def query_graph(entities, intent):
+    results = []
+    for entity in entities:
+        entity_name = entity["name"]
+        entity_type = entity["type"]
+        
+        if intent == "药物":
+            # 症状→疾病→药物
+            if entity_type == "Symptom":
+                query = """
+                MATCH (s:Symptom {name: $name})<-[:HAS_SYMPTOM]-(d:Disease)-[:HAS_Drug]->(dr)
+                RETURN dr.name AS drug
+                """
+                res = graph.run(query, name=entity_name).data()
+                results.extend([item["drug"] for item in res])
+            
+            # 疾病→药物
+            elif entity_type == "Disease":
+                query = """
+                MATCH (d:Disease {name: $name})-[:HAS_Drug]->(dr)
+                RETURN dr.name AS drug
+                """
+                res = graph.run(query, name=entity_name).data()
+                results.extend([item["drug"] for item in res])
+        
+        elif intent == "疾病" and entity_type == "Symptom":
+            query = """
+            MATCH (s:Symptom {name: $name})<-[:HAS_SYMPTOM]-(d:Disease)
+            RETURN d.name AS disease
+            """
+            res = graph.run(query, name=entity_name).data()
+            results.extend([item["disease"] for item in res])
+    
+    return list(set(results))  # 去重
+
+# 6. 主逻辑
+if __name__ == "__main__":
+    entity_dict = load_entities()
+    if not entity_dict:
+        print("实体数据加载失败！")
+        exit()
+    
+    text = "头痛应该吃什么药？"
+    print(f"用户输入：{text}")
+    
+    matched_entities = extract_entities(text, entity_dict)
+    if not matched_entities:
+        print("未识别到任何实体！")
+        exit()
+    print(f"识别到实体：{matched_entities}")
+    
+    intent = identify_intent(text)
+    print(f"识别到意图：{intent}")
+    
+    answers = query_graph(matched_entities, intent)
+    
+    if answers:
+        print(f"\n结果：{answers}")
+    else:
+        print("\n未查询到相关信息！")
 ```
-输入示例问题，系统会自动解析为 Cypher 并返回结果：
-plaintext
-用户：感冒有什么症状？
-小豪：疾病 感冒 的症状有：发烧,咳嗽,头痛
-**************************************************
-用户：发烧需要吃什么药？
-小豪：疾病 感冒 的治疗方法有：多喝水；可用药品包括：感冒药,退烧药
-**************************************************
+在命令行中执行：
+```bash
+python match_2.py
+```
+[运行成功截图](./screenshots/运行成功截图.png)
+
+## 五、对话系统的输入输出、用户交互
+### 1.修改脚本配置,确保create_graph_wmn_2.py中的 Neo4j 连接信息与实际一致
+### 2.在命令中执行代码user_interaction.py，进入交互页面。
+```bash
+python user_interaction.py
+```
+[交互页面用户对话成功截图](./screenshots/交互成功.png)
